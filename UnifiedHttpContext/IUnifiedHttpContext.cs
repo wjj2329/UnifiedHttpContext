@@ -5,53 +5,70 @@ using System.Web;
 using Microsoft.AspNetCore.Http;
 #endif
 using System.IO;
+using System.Linq;
+using System;
 
 namespace UnifiedHttpContextLib
 {
     public interface IUnifiedHttpContext
     {
 #if NETFRAMEWORK
-        System.Web.HttpContext HttpContext { get; }
-        HttpRequest HttpRequest { get; }
-        string HttpMethod { get; }
-        string Url { get; }
-        string RawUrl { get; }
-        bool IsSecureConnection { get; }
+        HttpContext HttpContext { get; }
 
-        string UserAgent { get; }
-        string Browser { get; }
+        #region HttpRequest Properties
+        HttpRequest HttpRequest { get; }
+        void HttpRequestAbort(); 
+
+        string[] HttpRequestAcceptTypes { get; }
+        string HttpRequestApplicationPath { get; }
+        string HttpRequestBrowser { get; }
+        HttpCookieCollection HttpRequestCookies { get; }
+        string HttpRequestContentType { get; }
+        long? HttpRequestContentLength { get; }
+        NameValueCollection HttpRequestForm { get; }
+        NameValueCollection HttpRequestHeaders { get; }
+        Stream HttpRequestInputStream { get; }
+        NameValueCollection HttpRequestQueryString { get; }
+        string HttpRequestHttpMethod { get; }
+        HttpFileCollection HttpRequestFiles { get; }
+        string HttpRequestRawUrl { get; }
+        string HttpRequestUserAgent { get; }
+        string[] HttpRequestUserLanguages { get; }
+        Uri HttpRequestUrlReferrer { get; }
+        string HttpRequestUrl { get; }
+        #endregion
+
+        // HttpContext-level properties
+        bool IsSecureConnection { get; }
         string UserHostAddress { get; }
 
-        NameValueCollection Headers { get; }
-        NameValueCollection QueryString { get; }
-        NameValueCollection Form { get; }
-        HttpCookieCollection Cookies { get; }
-        HttpFileCollection Files { get; }
-
-        Stream InputStream { get; }
 #elif NETCOREAPP
-        public Microsoft.AspNetCore.Http.HttpContext HttpContext { get; }
-        public HttpRequest HttpRequest { get; }
-        public string Url { get; }
+        HttpContext HttpContext { get; }
+        HttpRequest HttpRequest { get; }
 
-        public string RawUrl { get; }
-        public bool IsSecureConnection { get; }
+        // HttpRequest-prefixed properties
+        void HttpRequestAbort();
 
-        public string UserAgent { get; }
-
-        // No built-in Browser, return UserAgent (or use UAParser NuGet for richer info)
-        public string Browser { get; }
-
-        public string UserHostAddress { get; }
-
-        public IHeaderDictionary Headers { get; }
-        public IQueryCollection QueryString { get; }
-        public IFormCollection Form { get; }
-        public IRequestCookieCollection Cookies { get; }
-        public IFormFileCollection Files { get; }
-
-        public Stream InputStream { get; }
+        string HttpRequestMethod { get; }
+        string HttpRequestUrl { get; }
+        string HttpRequestRawUrl { get; }
+        string HttpRequestUserAgent { get; }
+        string HttpRequestBrowser { get; }
+        IHeaderDictionary HttpRequestHeaders { get; }
+        IQueryCollection HttpRequestQueryString { get; }
+        IFormCollection HttpRequestForm { get; }
+        IRequestCookieCollection HttpRequestCookies { get; }
+        IFormFileCollection HttpRequestFiles { get; }
+        Stream HttpRequestInputStream { get; }
+        public string[] HttpRequestAcceptTypes { get; }
+        public long? HttpRequestContentLength { get; }
+        public string HttpRequestContentType { get; }
+        public string HttpRequestUrlReferrer { get; }
+        public string HttpRequestUserLanguages  { get; }
+        public string HttpRequestApplicationPath { get; }
+        // HttpContext-level properties
+        bool IsSecureConnection { get; }
+        string UserHostAddress { get; }
 #endif
     }
 }
-    

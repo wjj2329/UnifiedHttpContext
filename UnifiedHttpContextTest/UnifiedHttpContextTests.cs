@@ -19,9 +19,9 @@ namespace UnifiedHttpContextTest
             TestHttpContextFactory.CreateFrameworkContext();
             var unified = new UnifiedHttpContextLib.UnifiedHttpContext();
 
-            Assert.Equal("http://localhost/", unified.Url);
-            Assert.Equal("/?param1=val1", unified.RawUrl);
-            Assert.Contains("UnitTestAgent", unified.UserAgent);
+            Assert.Equal("http://localhost/", unified.HttpRequestUrl);
+            Assert.Equal("/?param1=val1", unified.HttpRequestRawUrl);
+            Assert.Contains("UnitTestAgent", unified.HttpRequestUserAgent);
         }
 
         [Fact]
@@ -30,9 +30,9 @@ namespace UnifiedHttpContextTest
             TestHttpContextFactory.CreateFrameworkContext();
             var unified = new UnifiedHttpContextLib.UnifiedHttpContext();
 
-            Assert.Equal("val1", unified.QueryString["param1"]);
-            Assert.Equal("FormValue", unified.Form["FormKey"].ToString());
-            Assert.Equal("UnitTestAgent", unified.Headers["User-Agent"]);
+            Assert.Equal("val1", unified.HttpRequestQueryString["param1"]);
+            Assert.Equal("FormValue", unified.HttpRequestForm["FormKey"].ToString());
+            Assert.Equal("UnitTestAgent", unified.HttpRequestHeaders["User-Agent"]);
         }
 #elif NETCOREAPP
         [Fact]
@@ -41,9 +41,9 @@ namespace UnifiedHttpContextTest
             var accessor = TestHttpContextFactory.CreateCoreContext();
             var unified = new UnifiedHttpContextLib.UnifiedHttpContext(accessor);
 
-            Assert.Equal("http://localhost/test?param1=val1", unified.Url);
-            Assert.Equal("/test?param1=val1", unified.RawUrl);
-            Assert.Equal("UnitTestAgent", unified.UserAgent);
+            Assert.Equal("http://localhost/test?param1=val1", unified.HttpRequestUrl);
+            Assert.Equal("/test?param1=val1", unified.HttpRequestRawUrl);
+            Assert.Equal("UnitTestAgent", unified.HttpRequestUserAgent);
         }
 
         [Fact]
@@ -52,9 +52,9 @@ namespace UnifiedHttpContextTest
             var accessor = TestHttpContextFactory.CreateCoreContext();
             var unified = new UnifiedHttpContextLib.UnifiedHttpContext(accessor);
 
-            Assert.Equal("val1", unified.QueryString["param1"]);
-            Assert.Equal("FormValue", unified.Form["FormKey"]);
-            Assert.Equal("UnitTestAgent", unified.Headers["User-Agent"]);
+            Assert.Equal("val1", unified.HttpRequestQueryString["param1"]);
+            Assert.Equal("FormValue", unified.HttpRequestForm["FormKey"]);
+            Assert.Equal("UnitTestAgent", unified.HttpRequestHeaders["User-Agent"]);
         }
 #endif
     }

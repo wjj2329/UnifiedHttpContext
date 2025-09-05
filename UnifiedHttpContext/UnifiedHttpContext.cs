@@ -7,61 +7,88 @@ using Microsoft.AspNetCore.Http.Internal;
 using System.Linq;
 #endif
 using System.IO;
+using System;
 
 namespace UnifiedHttpContextLib
 {
     public class UnifiedHttpContext : IUnifiedHttpContext
     {
 #if NETFRAMEWORK
-        public System.Web.HttpContext HttpContext => System.Web.HttpContext.Current;
+        public HttpContext HttpContext => HttpContext.Current;
 
         public HttpRequest HttpRequest => HttpContext.Request;
-        public string HttpMethod => HttpRequest.HttpMethod;
-        public string Url => HttpRequest.Url.ToString();
-        public string RawUrl => HttpRequest.RawUrl;
-        public bool IsSecureConnection => HttpRequest.IsSecureConnection;
 
-        public string UserAgent => HttpRequest.UserAgent;
-        public string Browser => HttpRequest.Browser?.Type; // rough equivalent
+        #region HttpRequest Properties
+        public string[] HttpRequestAcceptTypes => HttpRequest.AcceptTypes;
+        public string HttpRequestApplicationPath => HttpRequest.ApplicationPath;
+        public string HttpRequestBrowser => HttpRequest.Browser?.Type; // rough equivalent
+        public HttpCookieCollection HttpRequestCookies => HttpRequest.Cookies;
+        public string HttpRequestContentType => HttpRequest.ContentType;
+        public long? HttpRequestContentLength => HttpRequest.ContentLength;
+        public NameValueCollection HttpRequestForm => HttpRequest.Form;
+        public NameValueCollection HttpRequestHeaders => HttpRequest.Headers;
+        public Stream HttpRequestInputStream => HttpRequest.InputStream;
+        public NameValueCollection HttpRequestQueryString => HttpRequest.QueryString;
+        public string HttpRequestRawUrl => HttpRequest.RawUrl;
+        public string HttpRequestHttpMethod => HttpRequest.HttpMethod;
+        public HttpFileCollection HttpRequestFiles => HttpRequest.Files;
+        public string HttpRequestUserAgent => HttpRequest.UserAgent;
+        public string[] HttpRequestUserLanguages => HttpRequest.UserLanguages;
+        public Uri HttpRequestUrlReferrer => HttpRequest.UrlReferrer;
+        public string HttpRequestUrl => HttpRequest.Url.ToString();
+        #endregion
+
+        // HttpContext-level properties
+        public bool IsSecureConnection => HttpRequest.IsSecureConnection;
         public string UserHostAddress => HttpRequest.UserHostAddress;
 
-        public NameValueCollection Headers => HttpRequest.Headers;
-        public NameValueCollection QueryString => HttpRequest.QueryString;
-        public NameValueCollection Form => HttpRequest.Form;
-        public HttpCookieCollection Cookies => HttpRequest.Cookies;
-        public HttpFileCollection Files => HttpRequest.Files;
+        public void HttpRequestAbort()
+        {
+            HttpRequest.Abort();
+        }
 
-        public Stream InputStream => HttpRequest.InputStream;
 #elif NETCOREAPP
         private readonly IHttpContextAccessor _httpContextAccessor;
+
         public UnifiedHttpContext(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
         }
-        public Microsoft.AspNetCore.Http.HttpContext HttpContext => _httpContextAccessor.HttpContext;
+
+        public HttpContext HttpContext => _httpContextAccessor.HttpContext;
 
         public HttpRequest HttpRequest => HttpContext.Request;
-        public string Url =>
+
+        // HttpRequest-prefixed properties
+        #region HttpRequest Properties
+
+        public string HttpRequestUrl =>
            $"{HttpRequest.Scheme}://{HttpRequest.Host}{HttpRequest.Path}{HttpRequest.QueryString}";
 
-        public string RawUrl => $"{HttpRequest.Path}{HttpRequest.QueryString}";
+        public string HttpRequestRawUrl => $"{HttpRequest.Path}{HttpRequest.QueryString}";
+        public string HttpRequestMethod => HttpRequest.Method;
+        public string HttpRequestUserAgent => HttpRequest.Headers["User-Agent"].FirstOrDefault();
+        public string HttpRequestBrowser => HttpRequestUserAgent; // no built-in Browser
+        public IHeaderDictionary HttpRequestHeaders => HttpRequest.Headers;
+        public IQueryCollection HttpRequestQueryString => HttpRequest.Query;
+        public IFormCollection HttpRequestForm => HttpRequest.HasFormContentType ? HttpRequest.Form : new FormCollection(null);
+        public IRequestCookieCollection HttpRequestCookies => HttpRequest.Cookies;
+        public IFormFileCollection HttpRequestFiles => HttpRequest.HasFormContentType ? HttpRequest.Form.Files : new FormFileCollection();
+        public Stream HttpRequestInputStream => HttpRequest.Body;
+        public string[] HttpRequestAcceptTypes =>
+            HttpRequest.Headers["Accept"].FirstOrDefault()?.Split(',') ?? Array.Empty<string>();
+
+        public long? HttpRequestContentLength => HttpRequest.ContentLength;
+        public string HttpRequestContentType => HttpRequest.ContentType;
+        public string HttpRequestUrlReferrer => HttpRequest.Headers["Referer"].FirstOrDefault();
+        public string HttpRequestUserLanguages => HttpRequest.Headers["Accept-Language"].FirstOrDefault();
+        public string HttpRequestApplicationPath => HttpContext.Request.PathBase;
+        public void HttpRequestAbort() => HttpContext.Abort();
+
+        #endregion
+        // HttpContext-level properties
         public bool IsSecureConnection => HttpRequest.IsHttps;
-
-        public string UserAgent => HttpRequest.Headers["User-Agent"].FirstOrDefault();
-
-        // No built-in Browser, return UserAgent (or use UAParser NuGet for richer info)
-        public string Browser => UserAgent;
-
         public string UserHostAddress => HttpRequest.HttpContext.Connection.RemoteIpAddress?.ToString();
-
-
-        public IHeaderDictionary Headers => HttpRequest.Headers;
-        public IQueryCollection QueryString => HttpRequest.Query;
-        public IFormCollection Form => HttpRequest.HasFormContentType ? HttpRequest.Form : new FormCollection(null);
-        public IRequestCookieCollection Cookies => HttpRequest.Cookies;
-        public IFormFileCollection Files => HttpRequest.HasFormContentType ? HttpRequest.Form.Files : new FormFileCollection();
-
-        public Stream InputStream => HttpRequest.Body;
 #endif
     }
 }

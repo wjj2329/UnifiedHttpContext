@@ -16,6 +16,7 @@ namespace UnifiedHttpContextTest
         public static HttpContext CreateFrameworkContext()
         {
             var request = new HttpRequest("", "http://localhost/", "param1=val1");
+
             request.Headers.Add("User-Agent", "UnitTestAgent");
             request.Form.Add("FormKey", "FormValue");
 
@@ -28,6 +29,7 @@ namespace UnifiedHttpContextTest
         public static IHttpContextAccessor CreateCoreContext()
         {
             var context = new DefaultHttpContext();
+
             context.Request.Scheme = "http";
             context.Request.Host = new HostString("localhost");
             context.Request.Path = "/test";
