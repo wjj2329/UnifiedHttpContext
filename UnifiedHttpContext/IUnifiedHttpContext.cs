@@ -1,12 +1,15 @@
 ﻿#if NETFRAMEWORK
 using System.Collections.Specialized;
 using System.Web;
+using System.Web.Routing;
 #elif NETCOREAPP
 using Microsoft.AspNetCore.Http;
 #endif
 using System.IO;
 using System.Linq;
 using System;
+using System.Text;
+using System.Security.Principal;
 
 namespace UnifiedHttpContextLib
 {
@@ -16,31 +19,47 @@ namespace UnifiedHttpContextLib
         HttpContext HttpContext { get; }
 
         #region HttpRequest Properties
-        HttpRequest HttpRequest { get; }
-        void HttpRequestAbort(); 
-
         string[] HttpRequestAcceptTypes { get; }
         string HttpRequestApplicationPath { get; }
-        string HttpRequestBrowser { get; }
+        string HttpRequestAnonymousID { get; }
+        string HttpRequestAppRelativeCurrentExecutionFilePath { get; }
+        HttpBrowserCapabilities HttpRequestBrowser { get; }
+        bool HttpRequestIsAuthenticated { get; }
+        bool HttpRequestIsLocal { get; }
+        bool HttpRequestIsSecureConnection { get; }
         HttpCookieCollection HttpRequestCookies { get; }
-        string HttpRequestContentType { get; }
+        Stream HttpRequestFilter { get; }
+        Encoding HttpRequestContentEncoding { get; }
         long? HttpRequestContentLength { get; }
+        string HttpRequestContentType { get; }
+        string HttpRequestCurrentExecutionFilePath { get; }
+        HttpFileCollection HttpRequestFiles { get; }
         NameValueCollection HttpRequestForm { get; }
         NameValueCollection HttpRequestHeaders { get; }
         Stream HttpRequestInputStream { get; }
+        WindowsIdentity HttpRequestLogonUserIdentity { get; }
+        NameValueCollection HttpRequestParams { get; }
+        string HttpRequestPath { get; }
+        string HttpRequestPathInfo { get; }
+        string HttpRequestPhysicalApplicationPath { get; }
+        string HttpRequestPhysicalPath { get; }
         NameValueCollection HttpRequestQueryString { get; }
-        string HttpRequestHttpMethod { get; }
-        HttpFileCollection HttpRequestFiles { get; }
         string HttpRequestRawUrl { get; }
-        string HttpRequestUserAgent { get; }
-        string[] HttpRequestUserLanguages { get; }
+        ReadEntityBodyMode HttpRequestReadEntityBodyMode { get; }
+        RequestContext HttpRequestRequestContext { get; }
+        string HttpRequestRequestType { get; }
+        NameValueCollection HttpRequestServerVariables { get; }
+        int HttpRequestTotalBytes { get; }
+        Uri HttpRequestUrl { get; }
         Uri HttpRequestUrlReferrer { get; }
-        string HttpRequestUrl { get; }
+        string HttpRequestUserAgent { get; }
+        string HttpRequestUserHostAddress { get; }
+        string HttpRequestUserHostName { get; }
+        string[] HttpRequestUserLanguages { get; }
+        HttpRequest HttpRequest { get; }
         #endregion
+        void HttpRequestAbort();
 
-        // HttpContext-level properties
-        bool IsSecureConnection { get; }
-        string UserHostAddress { get; }
 
 #elif NETCOREAPP
         HttpContext HttpContext { get; }
@@ -48,7 +67,7 @@ namespace UnifiedHttpContextLib
 
         // HttpRequest-prefixed properties
         void HttpRequestAbort();
-
+        #region HttpRequest Properties
         string HttpRequestMethod { get; }
         string HttpRequestUrl { get; }
         string HttpRequestRawUrl { get; }
@@ -66,6 +85,7 @@ namespace UnifiedHttpContextLib
         public string HttpRequestUrlReferrer { get; }
         public string HttpRequestUserLanguages  { get; }
         public string HttpRequestApplicationPath { get; }
+        #endregion
         // HttpContext-level properties
         bool IsSecureConnection { get; }
         string UserHostAddress { get; }

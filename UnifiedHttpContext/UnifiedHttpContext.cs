@@ -1,6 +1,7 @@
 ﻿#if NETFRAMEWORK
 using System.Collections.Specialized;
 using System.Web;
+using System.Web.Routing;
 #elif NETCOREAPP
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
@@ -8,6 +9,8 @@ using System.Linq;
 #endif
 using System.IO;
 using System;
+using System.Text;
+using System.Security.Principal;
 
 namespace UnifiedHttpContextLib
 {
@@ -21,31 +24,50 @@ namespace UnifiedHttpContextLib
         #region HttpRequest Properties
         public string[] HttpRequestAcceptTypes => HttpRequest.AcceptTypes;
         public string HttpRequestApplicationPath => HttpRequest.ApplicationPath;
-        public string HttpRequestBrowser => HttpRequest.Browser?.Type; // rough equivalent
+        public string HttpRequestAnonymousID => HttpRequest.AnonymousID;
+        public string HttpRequestAppRelativeCurrentExecutionFilePath => HttpRequest.AppRelativeCurrentExecutionFilePath;
+        public HttpBrowserCapabilities HttpRequestBrowser => HttpRequest.Browser;
+        public bool HttpRequestIsAuthenticated => HttpRequest.IsAuthenticated;
+        public bool HttpRequestIsLocal => HttpRequest.IsLocal;
+        public bool HttpRequestIsSecureConnection => HttpRequest.IsSecureConnection;
         public HttpCookieCollection HttpRequestCookies => HttpRequest.Cookies;
-        public string HttpRequestContentType => HttpRequest.ContentType;
+        public Stream HttpRequestFilter => HttpRequest.Filter;
+        public Encoding HttpRequestContentEncoding => HttpRequest.ContentEncoding;
         public long? HttpRequestContentLength => HttpRequest.ContentLength;
+        public string HttpRequestContentType => HttpRequest.ContentType;
+        public string HttpRequestCurrentExecutionFilePath => HttpRequest.CurrentExecutionFilePath;
+        public HttpFileCollection HttpRequestFiles => HttpRequest.Files;
         public NameValueCollection HttpRequestForm => HttpRequest.Form;
         public NameValueCollection HttpRequestHeaders => HttpRequest.Headers;
+        public string HttpRequestHttpMethod => HttpRequest.HttpMethod;
         public Stream HttpRequestInputStream => HttpRequest.InputStream;
+        public WindowsIdentity HttpRequestLogonUserIdentity => HttpRequest.LogonUserIdentity;
+        public NameValueCollection HttpRequestParams => HttpRequest.Params;
+        public string HttpRequestPath => HttpRequest.Path;
+        public string HttpRequestPathInfo => HttpRequest.PathInfo;
+        public string HttpRequestPhysicalApplicationPath => HttpRequest.PhysicalApplicationPath;
+        public string HttpRequestPhysicalPath => HttpRequest.PhysicalPath;
         public NameValueCollection HttpRequestQueryString => HttpRequest.QueryString;
         public string HttpRequestRawUrl => HttpRequest.RawUrl;
-        public string HttpRequestHttpMethod => HttpRequest.HttpMethod;
-        public HttpFileCollection HttpRequestFiles => HttpRequest.Files;
-        public string HttpRequestUserAgent => HttpRequest.UserAgent;
+        public ReadEntityBodyMode HttpRequestReadEntityBodyMode => HttpRequest.ReadEntityBodyMode;
+        public RequestContext HttpRequestRequestContext => HttpRequest.RequestContext;
+        public string HttpRequestRequestType => HttpRequest.RequestType;
+        public NameValueCollection HttpRequestServerVariables => HttpRequest.ServerVariables;
+        public int HttpRequestTotalBytes => HttpRequest.TotalBytes;
         public string[] HttpRequestUserLanguages => HttpRequest.UserLanguages;
+        public string HttpRequestUserHostAddress => HttpRequest.UserHostAddress;
+        public string HttpRequestUserHostName => HttpRequest.UserHostName;
+        public string HttpRequestUserAgent => HttpRequest.UserAgent;
+        public Uri HttpRequestUrl => HttpRequest.Url;
         public Uri HttpRequestUrlReferrer => HttpRequest.UrlReferrer;
-        public string HttpRequestUrl => HttpRequest.Url.ToString();
-        #endregion
-
-        // HttpContext-level properties
         public bool IsSecureConnection => HttpRequest.IsSecureConnection;
         public string UserHostAddress => HttpRequest.UserHostAddress;
 
-        public void HttpRequestAbort()
-        {
-            HttpRequest.Abort();
-        }
+
+        #endregion
+
+        public void HttpRequestAbort() => HttpRequest.Abort();
+
 
 #elif NETCOREAPP
         private readonly IHttpContextAccessor _httpContextAccessor;

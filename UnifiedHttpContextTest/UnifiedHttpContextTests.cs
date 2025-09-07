@@ -1,8 +1,7 @@
 using Xunit;
 using UnifiedHttpContextTest;
 using UnifiedHttpContextLib;
-
-
+using System;
 #if NETFRAMEWORK
 using System.Web;
 #elif NETCOREAPP
@@ -19,7 +18,7 @@ namespace UnifiedHttpContextTest
             TestHttpContextFactory.CreateFrameworkContext();
             var unified = new UnifiedHttpContextLib.UnifiedHttpContext();
 
-            Assert.Equal("http://localhost/", unified.HttpRequestUrl);
+            Assert.Equal(new Uri("http://localhost/"), unified.HttpRequestUrl);
             Assert.Equal("/?param1=val1", unified.HttpRequestRawUrl);
             Assert.Contains("UnitTestAgent", unified.HttpRequestUserAgent);
         }
