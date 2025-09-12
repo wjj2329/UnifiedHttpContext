@@ -15,6 +15,9 @@ using System.Security.Principal;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using System.Collections;
+using System.Drawing;
+
 
 namespace UnifiedHttpContextLib
 {
@@ -67,10 +70,114 @@ namespace UnifiedHttpContextLib
         public bool IsSecureConnection => HttpRequest.IsSecureConnection;
         public string UserHostAddress => HttpRequest.UserHostAddress;
 
+        public HttpResponse HttpResponse => HttpContext.Response;
+
+        public Encoding HttpResponseContentEncoding 
+        { 
+            get => HttpResponse.ContentEncoding; 
+            set => HttpResponse.ContentEncoding = value; 
+        }
+        public string HttpResponseContentType
+        {
+            get => HttpResponse.ContentType;
+            set => HttpResponse.ContentType = value;
+        }
+
+        public int HttpResponseStatusCode
+        {
+            get => HttpResponse.StatusCode;
+            set => HttpResponse.StatusCode = value;
+        }
+
+        public string HttpResponseStatusDescription
+        {
+            get => HttpResponse.StatusDescription;
+            set => HttpResponse.StatusDescription = value;
+        }
+
+        public bool HttpResponseBuffer
+        {
+            get => HttpResponse.Buffer;
+            set => HttpResponse.Buffer = value;
+        }
+
+        public bool HttpResponseIsClientConnected => HttpResponse.IsClientConnected;
+
+        public Stream HttpResponseOutputStream => HttpResponse.OutputStream;
+
+        public TextWriter HttpResponseOutput => HttpResponse.Output;
+
+        public HttpCookieCollection HttpResponseCookies => HttpResponse.Cookies;
+
+        public NameValueCollection HttpResponseHeaders => HttpResponse.Headers;
+
+        public bool HttpResponseSuppressContent
+        {
+            get => HttpResponse.SuppressContent;
+            set => HttpResponse.SuppressContent = value;
+        }
+
+        public string HttpResponseRedirectLocation
+        {
+            get => HttpResponse.RedirectLocation;
+            set => HttpResponse.RedirectLocation = value;
+        }
+
+        public bool HttpResponseTrySkipIisCustomErrors
+        {
+            get => HttpResponse.TrySkipIisCustomErrors;
+            set => HttpResponse.TrySkipIisCustomErrors = value;
+        }
+
+        public HttpCachePolicy HttpResponseCache => HttpResponse.Cache;
+
+        public bool HttpResponseIsRequestBeingRedirected => HttpResponse.IsRequestBeingRedirected;
+
 
         #endregion
+        #region HttpRequest Methods
 
         public void HttpRequestAbort() => HttpRequest.Abort();
+
+        public byte[] HttpRequestBinaryRead(int count) => HttpRequest.BinaryRead(count);
+
+        public Stream HttpRequestGetBufferedInputStream() => HttpRequest.GetBufferedInputStream();
+
+        public Stream HttpRequestGetBufferlessInputStream() => HttpRequest.GetBufferlessInputStream();
+
+        public Stream HttpRequestGetBufferlessInputStream(bool disableMaxRequestLength) => HttpRequest.GetBufferlessInputStream(disableMaxRequestLength);
+
+        public int[] HttpRequestMapImageCoordinates(string imageFieldName) => HttpRequest.MapImageCoordinates(imageFieldName);
+
+        public string HttpRequestMapPath(string virtualPath) => HttpRequest.MapPath(virtualPath);
+
+        public void HttpRequestSaveAs(string filename, bool includeHeaders) => HttpRequest.SaveAs(filename, includeHeaders);
+
+        public void HttpRequestValidateInput() => HttpRequest.ValidateInput();
+
+        public void HttpResponseAddFileDependency(string filename) => HttpResponse.AddFileDependency(filename);
+        public void HttpResponseAddHeader(string name, string value) => HttpResponse.AddHeader(name, value);
+        public void HttpResponseAppendCookie(HttpCookie cookie) => HttpResponse.AppendCookie(cookie);
+        public void HttpResponseAppendHeader(string name, string value) => HttpResponse.AppendHeader(name, value);
+        public void HttpResponseBinaryWrite(byte[] buffer) => HttpResponse.BinaryWrite(buffer);
+        public void HttpResponseClear() => HttpResponse.Clear();
+        public void HttpResponseClearContent() => HttpResponse.ClearContent();
+        public void HttpResponseClearHeaders() => HttpResponse.ClearHeaders();
+        public void HttpResponseClose() => HttpResponse.Close();
+        public void HttpResponseDisableKernelCache() => HttpResponse.DisableKernelCache();
+        public void HttpResponseEnd() => HttpResponse.End();
+        public void HttpResponseFlush() => HttpResponse.Flush();
+        public void HttpResponseRedirect(string url) => HttpResponse.Redirect(url);
+        public void HttpResponseRedirect(string url, bool endResponse) => HttpResponse.Redirect(url, endResponse);
+        public void HttpResponseSetCookie(HttpCookie cookie) => HttpResponse.SetCookie(cookie);
+        public void HttpResponseWrite(string s) => HttpResponse.Write(s);
+        public void HttpResponseWrite(char ch) => HttpResponse.Write(ch);
+        public void HttpResponseWrite(char[] buffer, int index, int count) => HttpResponse.Write(buffer, index, count);
+        public void HttpResponseWriteFile(string filename) => HttpResponse.WriteFile(filename);
+        public void HttpResponseWriteFile(string filename, bool readIntoMemory) => HttpResponse.WriteFile(filename, readIntoMemory);
+        public void HttpResponseWriteFile(IntPtr fileHandle, long offset, long size) => HttpResponse.WriteFile(fileHandle, offset, size);
+
+        #endregion
 
 
 #elif NETCOREAPP
@@ -113,7 +220,7 @@ namespace UnifiedHttpContextLib
 
         #endregion
         // HttpContext-level properties
-        public bool IsSecureConnection => HttpRequest.IsHttps;
+        public bool HttpRequestIsSecureConnection => HttpRequest.IsHttps;
         public string UserHostAddress => HttpRequest.HttpContext.Connection.RemoteIpAddress?.ToString();
 
         private const string AnonymousIdCookieName = "ANONYMOUS_ID";
@@ -191,21 +298,6 @@ namespace UnifiedHttpContextLib
                 // Compare RemoteIp with LocalIp
                 return connection.LocalIpAddress != null &&
                        connection.RemoteIpAddress.Equals(connection.LocalIpAddress);
-            }
-        }
-
-        public bool HttpRequestIsSecureConnection
-        {
-            get
-            {
-                if (HttpContext?.Request == null)
-                    return false;
-
-                // The modern reliable way
-                return HttpContext.Request.IsHttps;
-
-                // Alternative if you want to also handle proxy headers (e.g., behind load balancers):
-                // return string.Equals(HttpContext.Request.Scheme, "https", StringComparison.OrdinalIgnoreCase);
             }
         }
 
@@ -349,22 +441,22 @@ namespace UnifiedHttpContextLib
         }
         public UnifiedReadEntityBodyMode HttpRequestReadEntityBodyMode => UnifiedReadEntityBodyMode.Classic;
 
+        // ✅ Equivalent to HttpRequest.RequestContext (not really a thing in Core)
+        // You could expose HttpContext.Items instead — works as a per-request dictionary.
+        public IDictionary<object, object> HttpRequestRequestContext => HttpContext.Items;
 
-        public IDictionary<string, object> HttpRequestRequestContext => throw new NotImplementedException();
+        // ✅ Equivalent to HttpRequest.RequestType ("GET", "POST", etc.)
+        public string HttpRequestRequestType => HttpRequest.Method;
 
-        public string HttpRequestRequestType => throw new NotImplementedException();
+        // ✅ Equivalent to HttpRequest.ServerVariables
+        // Core has no ServerVariables, but you can expose headers as closest thing.
+        public IHeaderDictionary HttpRequestServerVariables => HttpRequest.Headers;
 
-        public IHeaderDictionary HttpRequestServerVariables => throw new NotImplementedException();
+        // ✅ Equivalent to HttpRequest.TotalBytes
+        // This reads the Content-Length header if present.
+        public int HttpRequestTotalBytes => (int)(HttpRequest.ContentLength ?? 0);
 
-        public int HttpRequestTotalBytes => throw new NotImplementedException();
-
-        public string HttpRequestUserHostAddress => throw new NotImplementedException();
-
-        Task<string> IUnifiedHttpContext.HttpRequestUserHostName => throw new NotImplementedException();
-
-        Task<string> IUnifiedHttpContext.HttpRequestUserHostAddress => throw new NotImplementedException();
-
-        public async Task<string> HttpRequestUserHostName()
+        private async Task<string> HttpRequestUserHostNameHelper()
         {
             var ipAddress = HttpContext.Connection.RemoteIpAddress;
             if (ipAddress == null)
@@ -380,6 +472,11 @@ namespace UnifiedHttpContextLib
                 return ipAddress.ToString(); // fallback
             }
         }
+        public Task<string> HttpRequestUserHostAddress => Task.FromResult(HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+
+        public Task<string> HttpRequestUserHostName => HttpRequestUserHostNameHelper();
+
+
 #endif
     }
 }

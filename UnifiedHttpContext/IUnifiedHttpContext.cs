@@ -60,8 +60,71 @@ namespace UnifiedHttpContextLib
         string[] HttpRequestUserLanguages { get; }
         HttpRequest HttpRequest { get; }
         #endregion
+        #region HttpRequest Methods
         void HttpRequestAbort();
+        byte[] HttpRequestBinaryRead(int count);
+        Stream HttpRequestGetBufferedInputStream();
+        Stream HttpRequestGetBufferlessInputStream();
+        Stream HttpRequestGetBufferlessInputStream(bool disableMaxRequestLength);
+        int[] HttpRequestMapImageCoordinates(string imageFieldName);
+        string HttpRequestMapPath(string virtualPath);
+        void HttpRequestSaveAs(string filename, bool includeHeaders);
+        void HttpRequestValidateInput();
+        #endregion
+        #region HttpResponse Properties
+        HttpResponse HttpResponse { get; }
+        Encoding HttpResponseContentEncoding { get; set; }
+        string HttpResponseContentType { get; set; }
+        int HttpResponseStatusCode { get; set; }
+        string HttpResponseStatusDescription { get; set; }
+        bool HttpResponseBuffer { get; set; }
+        bool HttpResponseIsClientConnected { get; }
 
+        Stream HttpResponseOutputStream { get; }
+        TextWriter HttpResponseOutput { get; }
+
+        HttpCookieCollection HttpResponseCookies { get; }
+        NameValueCollection HttpResponseHeaders { get; }
+
+        bool HttpResponseSuppressContent { get; set; }
+        string HttpResponseRedirectLocation { get; set; }
+
+        bool HttpResponseTrySkipIisCustomErrors { get; set; }
+        HttpCachePolicy HttpResponseCache { get; }
+        bool HttpResponseIsRequestBeingRedirected { get; }
+        #endregion
+        #region HttpResponse Methods
+        // Writing / output
+        void HttpResponseWrite(string s);
+        void HttpResponseWrite(char ch);
+        void HttpResponseWrite(char[] buffer, int index, int count);
+        void HttpResponseWriteFile(string filename);
+        void HttpResponseWriteFile(string filename, bool readIntoMemory);
+        void HttpResponseWriteFile(IntPtr fileHandle, long offset, long size);
+
+        // Flushing / buffering
+        void HttpResponseFlush();
+        void HttpResponseClear();
+        void HttpResponseClearContent();
+        void HttpResponseClearHeaders();
+        void HttpResponseEnd();
+
+        // Redirection
+        void HttpResponseRedirect(string url);
+        void HttpResponseRedirect(string url, bool endResponse);
+
+        // Compression / buffering
+        void HttpResponseAddFileDependency(string filename);
+        void HttpResponseAddHeader(string name, string value);
+        void HttpResponseAppendCookie(HttpCookie cookie);
+        void HttpResponseAppendHeader(string name, string value);
+
+        // Misc / lifecycle
+        void HttpResponseBinaryWrite(byte[] buffer);
+        void HttpResponseClose();
+        void HttpResponseDisableKernelCache();
+        void HttpResponseSetCookie(HttpCookie cookie);
+        #endregion
 #elif NETCOREAPP
         HttpContext HttpContext { get; }
         HttpRequest HttpRequest { get; }
@@ -96,7 +159,7 @@ namespace UnifiedHttpContextLib
         string HttpRequestPhysicalPath { get; } // Optional
         string HttpRequestRawUrl { get; }
         UnifiedReadEntityBodyMode HttpRequestReadEntityBodyMode { get; } // Optional
-        IDictionary<string, object> HttpRequestRequestContext { get; } // Optional
+        IDictionary<object, object> HttpRequestRequestContext { get; } // Optional
         string HttpRequestRequestType { get; } // Maps to HttpRequest.Method
         IHeaderDictionary HttpRequestServerVariables { get; } // Optional mapping
         int HttpRequestTotalBytes { get; } // Optional
@@ -107,9 +170,6 @@ namespace UnifiedHttpContextLib
         string HttpRequestUrlReferrer { get; }
         string HttpRequestMethod { get; }
         #endregion
-
-        // HttpContext-level properties
-        bool IsSecureConnection { get; }
         Task<string> HttpRequestUserHostAddress { get; }
 #endif
     }
