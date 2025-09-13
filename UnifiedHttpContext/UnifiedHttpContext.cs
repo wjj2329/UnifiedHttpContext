@@ -17,6 +17,9 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Drawing;
+using System.Collections.Specialized;
+using UnifiedHttpContext;
+using System.Net.Http;
 
 
 namespace UnifiedHttpContextLib
@@ -472,9 +475,239 @@ namespace UnifiedHttpContextLib
                 return ipAddress.ToString(); // fallback
             }
         }
+        // Async version (preferred)
+        public async Task HttpResponseWriteAsync(string s)
+        {
+            await HttpResponse.WriteAsync(s);
+        }
+
+        // Sync version (legacy support)
+        public void HttpResponseWrite(string s)
+        {
+            HttpResponseWriteAsync(s).GetAwaiter().GetResult();
+        }
+
+        public void HttpResponseWrite(char ch)
+        {
+            HttpResponseWrite(ch.ToString());
+        }
+
+        public async Task HttpResponseWriteAsync(char ch)
+        {
+            await HttpResponse.WriteAsync(ch.ToString());
+        }
+
+
+        public void HttpResponseWrite(char[] buffer, int index, int count)
+        {
+            HttpResponseWrite(new string(buffer, index, count));
+        }
+
+        public async Task HttpResponseWriteAsync(char[] buffer, int index, int count)
+        {
+            await HttpResponse.WriteAsync(new string(buffer, index, count));
+        }
+
+
+        public void HttpResponseWriteFile(string filename)
+        {
+            // Default behavior: read entire file into memory
+            var bytes = System.IO.File.ReadAllBytes(filename);
+            HttpResponse.Body.Write(bytes, 0, bytes.Length);
+        }
+
+        public void HttpResponseWriteFile(string filename, bool readIntoMemory)
+        {
+            if (readIntoMemory)
+            {
+                HttpResponseWriteFile(filename);
+            }
+            else
+            {
+                using var fs = System.IO.File.OpenRead(filename);
+                fs.CopyTo(HttpResponse.Body);
+            }
+        }
+
+        public void HttpResponseWriteFile(IntPtr fileHandle, long offset, long size)
+        {
+            using var fs = new System.IO.FileStream(fileHandle, System.IO.FileAccess.Read);
+            fs.Seek(offset, System.IO.SeekOrigin.Begin);
+
+            var buffer = new byte[81920];
+            long remaining = size;
+            int read;
+            while (remaining > 0 && (read = fs.Read(buffer, 0, (int)Math.Min(buffer.Length, remaining))) > 0)
+            {
+                HttpResponse.Body.Write(buffer, 0, read);
+                remaining -= read;
+            }
+        }
+
+        public void HttpResponseFlush()
+        {
+            HttpResponse.Body.Flush();
+        }
+
+
+        public void HttpResponseClear()
+        {
+            HttpResponse.Clear(); // extension in Microsoft.AspNetCore.Http.Abstractions
+        }
+
+        public void HttpResponseClearContent()
+        {
+            HttpResponse.Body.SetLength(0);
+        }
+
+        public void HttpResponseClearHeaders()
+        {
+            HttpResponse.Headers.Clear();
+        }
+
+
+        public void HttpResponseEnd()
+        {
+            // Signal no more response body will be sent
+            HttpResponse.Body.Flush();
+            HttpContext.Abort();
+        }
+
+
+        public void HttpResponseRedirect(string url)
+        {
+            HttpResponse.Redirect(url, permanent: false);
+        }
+
+        public void HttpResponseRedirect(string url, bool endResponse)
+        {
+            HttpResponse.Redirect(url, permanent: false);
+
+            if (endResponse)
+            {
+                // Mimic old Response.End behavior
+                HttpResponse.Body.Flush();
+                HttpContext.Abort();
+            }
+        }
+
+
+        public void HttpResponseAddFileDependency(string filename)
+        {
+            throw new NotImplementedException("Net Core does not support this");
+        }
+
+        public void HttpResponseAddHeader(string name, string value)
+        {
+            HttpResponse.Headers.Append(name, value);
+        }
+
+        public void HttpResponseAppendCookie(string key, string value, CookieOptions options = null)
+        {
+            if (options == null)
+                options = new CookieOptions();
+
+            HttpResponse.Cookies.Append(key, value, options);
+        }
+
+        public void HttpResponseAppendHeader(string name, string value)
+        {
+            HttpResponse.Headers.Append(name, value);
+        }
+
+        public void HttpResponseBinaryWrite(byte[] buffer)
+        {
+            HttpResponse.Body.Write(buffer, 0, buffer.Length);
+        }
+
+        public async Task HttpResponseBinaryWriteAsync(byte[] buffer)
+        {
+            await HttpResponse.Body.WriteAsync(buffer, 0, buffer.Length);
+        }
+
+        public void HttpResponseClose()
+        {
+            HttpResponse.HttpContext.Abort();
+        }
+
+        public void HttpResponseDisableKernelCache()
+        {
+            HttpResponse.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+            HttpResponse.Headers["Pragma"] = "no-cache";
+            HttpResponse.Headers["Expires"] = "0";
+        }
+
+        public void HttpResponseSetCookie(string key, string value, CookieOptions options = null)
+        {
+            if (options == null)
+                options = new CookieOptions();
+
+            // Append in ASP.NET Core always overwrites if the cookie exists
+            HttpResponse.Cookies.Append(key, value, options);
+        }
+
+
         public Task<string> HttpRequestUserHostAddress => Task.FromResult(HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
 
         public Task<string> HttpRequestUserHostName => HttpRequestUserHostNameHelper();
+
+        public HttpResponse HttpResponse => HttpContext.Response;
+
+        public Encoding HttpResponseContentEncoding
+        {
+            get => HttpResponse.Headers.ContainsKey("Content-Encoding")
+                   ? Encoding.GetEncoding(HttpResponse.Headers["Content-Encoding"])
+                   : Encoding.UTF8;
+            set => HttpResponse.Headers["Content-Encoding"] = value.WebName;
+        }
+        public string HttpResponseContentType
+        {
+            get => HttpResponse.ContentType;
+            set => HttpResponse.ContentType = value;
+        }
+        public int HttpResponseStatusCode
+        {
+            get => HttpResponse.StatusCode;
+            set => HttpResponse.StatusCode = value;
+        }
+        public string HttpResponseStatusDescription { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool HttpResponseBuffer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public bool HttpResponseIsClientConnected => !HttpResponse.HttpContext.RequestAborted.IsCancellationRequested;
+
+        public Stream HttpResponseOutputStream => HttpResponse.Body;
+
+        public TextWriter HttpResponseOutput => new StreamWriter(HttpResponse.Body, leaveOpen: true);
+
+        public HttpCookieCollectionWrapper HttpResponseCookies => new HttpCookieCollectionWrapper(HttpContext);
+
+        public NameValueCollection HttpResponseHeaders
+        {
+            get
+            {
+                var nvc = new NameValueCollection();
+                foreach (var header in HttpResponse.Headers)
+                {
+                    nvc.Add(header.Key, string.Join(",", header.Value));
+                }
+                return nvc;
+            }
+        }
+
+        public bool HttpResponseSuppressContent { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public string HttpResponseRedirectLocation
+        {
+            get => HttpResponse.Headers["Location"];
+            set => HttpResponse.Headers["Location"] = value;
+        }
+        public bool HttpResponseTrySkipIisCustomErrors { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public HttpCachePolicyWrapper HttpResponseCache => new HttpCachePolicyWrapper(HttpResponse);
+
+        public bool HttpResponseIsRequestBeingRedirected
+        {
+            get => HttpResponse.StatusCode >= 300 && HttpResponse.StatusCode < 400;
+        }
 
 
 #endif

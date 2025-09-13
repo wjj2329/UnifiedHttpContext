@@ -12,6 +12,8 @@ using System.Text;
 using System.Security.Principal;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Collections.Specialized;
+using UnifiedHttpContext;
 
 namespace UnifiedHttpContextLib
 {
@@ -169,8 +171,62 @@ namespace UnifiedHttpContextLib
         string HttpRequestUrl { get; }
         string HttpRequestUrlReferrer { get; }
         string HttpRequestMethod { get; }
-        #endregion
         Task<string> HttpRequestUserHostAddress { get; }
+        #endregion
+        #region HttpResponse Properties
+        HttpResponse HttpResponse { get; }
+        Encoding HttpResponseContentEncoding { get; set; }
+        string HttpResponseContentType { get; set; }
+        int HttpResponseStatusCode { get; set; }
+        string HttpResponseStatusDescription { get; set; }
+        bool HttpResponseBuffer { get; set; }
+        bool HttpResponseIsClientConnected { get; }
+
+        Stream HttpResponseOutputStream { get; }
+        TextWriter HttpResponseOutput { get; }
+
+        HttpCookieCollectionWrapper HttpResponseCookies { get; }
+        NameValueCollection HttpResponseHeaders { get; }
+
+        bool HttpResponseSuppressContent { get; set; }
+        string HttpResponseRedirectLocation { get; set; }
+
+        bool HttpResponseTrySkipIisCustomErrors { get; set; }
+        HttpCachePolicyWrapper HttpResponseCache { get; }
+        bool HttpResponseIsRequestBeingRedirected { get; }
+        #endregion
+        #region HttpResponse Methods
+        // Writing / output
+        void HttpResponseWrite(string s);
+        void HttpResponseWrite(char ch);
+        void HttpResponseWrite(char[] buffer, int index, int count);
+        void HttpResponseWriteFile(string filename);
+        void HttpResponseWriteFile(string filename, bool readIntoMemory);
+        void HttpResponseWriteFile(IntPtr fileHandle, long offset, long size);
+
+        // Flushing / buffering
+        void HttpResponseFlush();
+        void HttpResponseClear();
+        void HttpResponseClearContent();
+        void HttpResponseClearHeaders();
+        void HttpResponseEnd();
+
+        // Redirection
+        void HttpResponseRedirect(string url);
+        void HttpResponseRedirect(string url, bool endResponse);
+
+        // Compression / buffering
+        void HttpResponseAddFileDependency(string filename);
+        void HttpResponseAddHeader(string name, string value);
+        void HttpResponseAppendCookie(string key, string value, CookieOptions options = null);
+        void HttpResponseAppendHeader(string name, string value);
+
+        // Misc / lifecycle
+        void HttpResponseBinaryWrite(byte[] buffer);
+        void HttpResponseClose();
+        void HttpResponseDisableKernelCache();
+        void HttpResponseSetCookie(string key, string value, CookieOptions options = null);
+        #endregion
 #endif
     }
 }
